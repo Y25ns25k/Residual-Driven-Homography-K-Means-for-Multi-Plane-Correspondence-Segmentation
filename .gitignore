@@ -1,0 +1,40 @@
+# Python caches, test state, and build products
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+# Local editor and environment files
+.venv/
+.vscode/
+.idea/
+.claude/
+.agents/
+.env
+.env.*
+
+# Local project notes and legacy entry points
+/CLAUDE.md
+/FINAL_REPORT_SUMMARY.md
+/main.py
+/config.py
+/experiments/
+
+# Generated experiment artifacts and local datasets
+/outputs/
+/results/
+/data/
+/presentation_assets/
+/presentation/
+/report/
+
+# External checkout: fetch upstream separately and preserve its own terms
+/third_party/consac/
+
+# Downloaded/submission artifacts
+*.tar.gz
+/2020-17305.pdf

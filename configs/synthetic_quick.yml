@@ -1,0 +1,60 @@
+run_name: synthetic_quick
+output_root: outputs
+seed: 7
+image_shape: [480, 640]
+write_reports: false
+
+synthetic:
+  generator: physical
+  difficulties: [easy, medium, hard]
+  scenes_per_difficulty: 1
+  points_per_plane:
+    easy: 45
+    medium: 40
+    hard: 35
+  noise_std:
+    easy: 0.35
+    medium: 0.65
+    hard: 0.9
+  outlier_ratio:
+    easy: 0.08
+    medium: 0.15
+    hard: 0.22
+
+methods:
+  - sequential_ransac
+  - seq_global_reassignment
+  - residual_hkm_no_merge
+  - residual_hkm_conservative
+  - residual_hkm_functional_merge
+  - residual_hkm_energy_merge
+
+ransac:
+  threshold: 3.0
+  max_iterations: 900
+  confidence: 0.995
+  min_support: 18
+  max_models: 5
+
+hkm:
+  max_iterations: 12
+  min_support: 18
+  tau_abs: 4.5
+  tau_norm: 3.0
+  sigma_min: 0.75
+  huber_c: 2.5
+  lambda_K: 18.0
+  gamma_outlier: 8.0
+  eps_energy: 0.05
+  energy_tolerance: 0.01
+  label_change_tolerance: 0.01
+  merge_threshold: 4.0
+  discovery_max_models_per_iter: 1
+  reassignment_margin: 0.15
+  discovery_improvement_margin: 0.20
+  spatial_coverage_min: 0.05
+  discovery_split_validation: true
+
+threshold_sweep:
+  tau_abs: [3.0, 4.5, 6.0]
+  tau_norm: [2.0, 3.0]

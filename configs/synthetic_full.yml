@@ -1,0 +1,70 @@
+run_name: synthetic_full
+output_root: outputs
+seed: 42
+image_shape: [480, 640]
+write_reports: false
+
+synthetic:
+  generator: physical
+  difficulties: [easy, medium, hard]
+  scenes_per_difficulty: 2
+  points_per_plane:
+    easy: 60
+    medium: 50
+    hard: 45
+  noise_std:
+    easy: 0.3
+    medium: 0.75
+    hard: 1.2
+  outlier_ratio:
+    easy: 0.08
+    medium: 0.18
+    hard: 0.28
+
+methods:
+  - sequential_ransac
+  - residual_hkm_no_merge
+  - residual_hkm_conservative
+  - residual_hkm_functional_merge
+  - residual_hkm_energy_merge
+
+ransac:
+  threshold: 3.0
+  max_iterations: 1200
+  confidence: 0.997
+  min_support: 22
+  max_models: 6
+
+hkm:
+  max_iterations: 18
+  min_support: 22
+  tau_abs: 4.5
+  tau_norm: 3.0
+  sigma_min: 0.75
+  huber_c: 2.5
+  lambda_K: 20.0
+  gamma_outlier: 8.0
+  eps_energy: 0.05
+  energy_tolerance: 0.01
+  label_change_tolerance: 0.005
+  merge_threshold: 4.0
+  discovery_max_models_per_iter: 1
+  reassignment_margin: 0.15
+  discovery_improvement_margin: 0.20
+  spatial_coverage_min: 0.05
+  discovery_split_validation: true
+
+threshold_sweep:
+  tau_abs: [2.5, 4.0, 5.5, 7.0]
+  tau_norm: [2.5, 3.5]
+
+merge_calibration:
+  lambda_K: [8.0, 20.0, 45.0]
+  gamma_outlier: [4.0, 8.0, 14.0]
+  functional_merge_threshold: [2.0, 4.0, 7.0]
+  min_support: [16, 22, 30]
+
+conservative_calibration:
+  reassignment_margin: [0.05, 0.10, 0.15, 0.20]
+  discovery_improvement_margin: [0.10, 0.20, 0.30]
+  spatial_coverage_min: [0.03, 0.05, 0.08]

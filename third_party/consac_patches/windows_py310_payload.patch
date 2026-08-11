@@ -1,0 +1,129 @@
+﻿diff --git a/datasets/homographies/adelaide.py b/datasets/homographies/adelaide.py
+index ef9351f..e465cb3 100644
+--- a/datasets/homographies/adelaide.py
++++ b/datasets/homographies/adelaide.py
+@@ -3,6 +3,10 @@ import scipy.io
+ from torch.utils.data import Dataset
+ from util.sampling import *
+ 
++if not hasattr(np, "int"):
++    # NumPy 2 compatibility patch; np.int was an alias for builtin int.
++    np.int = int
++
+ class AdelaideRMF:
+ 
+     homography_sequences = [
+diff --git a/evaluate_homography.py b/evaluate_homography.py
+index aa0a42b..429c337 100644
+--- a/evaluate_homography.py
++++ b/evaluate_homography.py
+@@ -9,6 +9,7 @@ from util.em_algorithm import em_for_homographies
+ import random
+ from util.evaluation import calc_labels_and_misclassification_error
+ import time
++from pathlib import Path
+ 
+ 
+ def rgb2gray(rgb):
+@@ -41,15 +42,24 @@ parser.add_argument('--cpu', dest='cpu', action='store_true', help='Run CPU only
+ parser.add_argument('--unconditional', dest='unconditional', action='store_true', help='disable conditional sampling',
+                     default=False)
+ parser.add_argument('--resultfile', default=None)
++parser.add_argument('--resultdir', default=None,
++                    help='Optional directory for saving per-scene/run payloads. Local side-effect-only patch.')
+ 
+ opt = parser.parse_args()
+ 
++if opt.resultdir is not None:
++    Path(opt.resultdir).mkdir(parents=True, exist_ok=True)
++
+ torch.manual_seed(opt.seed)
+ np.random.seed(opt.seed)
+ random.seed(opt.seed)
+ 
+ valset = adelaide.AdelaideRMFDataset(opt.dataset_path, None, return_images=True)
+-valset_loader = torch.utils.data.DataLoader(valset, shuffle=False, num_workers=6, batch_size=1)
++# Local Windows/Python 3 compatibility patch: the original script uses
++# num_workers=6 at module top-level, which fails under spawn-based
++# multiprocessing because this file is not guarded by if __name__ == '__main__'.
++# Keeping workers at 0 changes only data loading, not sampling/evaluation logic.
++valset_loader = torch.utils.data.DataLoader(valset, shuffle=False, num_workers=0, batch_size=1)
+ 
+ device = torch.device('cuda' if torch.cuda.is_available() and not opt.cpu else 'cpu', 0)
+ print(opt)
+@@ -265,13 +275,50 @@ for data, num_data, masks, labels, images in valset_loader:
+         end_time = time.time()
+ 
+         me_start = time.time()
+-        estm_models = np.vstack(estm_models)
+-        estm_labels, miss_rate = calc_labels_and_misclassification_error(data[bi], selected_instances, estm_models,
+-                                                                           opt.threshold, labels[bi])
++        if len(estm_models) > 0:
++            estm_models = np.vstack(estm_models)
++            estm_labels, miss_rate = calc_labels_and_misclassification_error(data[bi], selected_instances, estm_models,
++                                                                               opt.threshold, labels[bi])
++        else:
++            # Local robustness patch for modern PyTorch/CPU runs where a
++            # degenerate random draw can select zero instances. The original
++            # script crashes at np.vstack([]). We record the corresponding
++            # single-cluster degenerate prediction instead of changing sampling.
++            estm_models = np.zeros((0, 9), dtype=np.float32)
++            true_labels = labels[bi].cpu().numpy().astype(int)
++            if true_labels.size:
++                best_label = np.bincount(true_labels).argmax()
++                estm_labels = np.full_like(true_labels, best_label)
++                miss_rate = 1.0 - float(np.mean(true_labels == best_label))
++            else:
++                estm_labels = true_labels
++                miss_rate = 0.0
+         me_end = time.time()
+         me_time = me_end-me_start
+ 
+         print("miss. rate: %.2f" % (miss_rate * 100))
++        if opt.resultdir is not None:
++            scene_file = adelaide.AdelaideRMF.homography_sequences[image_idx]
++            scene_name = scene_file.replace(".mat", "")
++            payload_path = Path(opt.resultdir) / ("%s_run%d.npz" % (scene_name, si))
++            img1_shape = np.array(images[0].cpu().numpy().squeeze().shape)
++            img2_shape = np.array(images[1].cpu().numpy().squeeze().shape)
++            np.savez_compressed(
++                payload_path,
++                scene_name=np.asarray(scene_name),
++                run_index=np.asarray(si, dtype=np.int64),
++                selected_instances=np.asarray(selected_instances, dtype=np.int64),
++                official_models_norm=np.asarray(estm_models, dtype=np.float64),
++                official_estm_labels=np.asarray(estm_labels, dtype=np.int32),
++                official_miss_rate=np.asarray(miss_rate, dtype=np.float64),
++                official_miss_rate_percent=np.asarray(miss_rate * 100., dtype=np.float64),
++                data_norm=data[bi].cpu().numpy(),
++                labels_gt=labels[bi].cpu().numpy(),
++                img1_shape=img1_shape,
++                img2_shape=img2_shape,
++                threshold=np.asarray(opt.threshold, dtype=np.float64),
++                threshold2=np.asarray(opt.threshold2, dtype=np.float64),
++            )
+         all_miss_rates += [miss_rate * 100.]
+ 
+         miss_rates += [miss_rate * 100.]
+diff --git a/util/evaluation.py b/util/evaluation.py
+index 3b45f29..5bc64a4 100644
+--- a/util/evaluation.py
++++ b/util/evaluation.py
+@@ -3,6 +3,10 @@ import scipy.optimize
+ import torch
+ from util import sampling
+ 
++if not hasattr(np, "int"):
++    # NumPy 2 compatibility patch; np.int was an alias for builtin int.
++    np.int = int
++
+ 
+ def single_eval_nyu(true_vps, estm_vps, separate_errors=True, normalised_coords=True, missing_vp_penalty=90.):
+ 
+@@ -168,4 +172,4 @@ def calc_labels(data, num_estm_instances, estm_models, threshold):
+     estm_labels = estm_label + 1
+     estm_labels *= is_inlier
+ 
+-    return estm_labels
+\ No newline at end of file
++    return estm_labels

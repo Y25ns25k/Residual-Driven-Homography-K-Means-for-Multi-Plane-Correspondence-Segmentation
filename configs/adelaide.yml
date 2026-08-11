@@ -1,0 +1,39 @@
+run_name: adelaide
+output_root: outputs
+seed: 123
+num_seeds: 5
+image_shape: [480, 640]
+include_outliers: false
+include_outliers_values: [false, true]
+write_reports: false
+
+methods:
+  - global_ransac
+  - sequential_ransac
+  - residual_hkm_v2
+
+ransac:
+  threshold: 2.5
+  max_iterations: 2500
+  confidence: 0.999
+  min_support: 20
+  max_models: 8
+
+hkm:
+  max_iterations: 20
+  min_support: 20
+  tau_abs: 4.0
+  tau_norm: 3.0
+  sigma_min: 0.75
+  huber_c: 2.5
+  lambda_K: 25.0
+  gamma_outlier: 8.0
+  eps_energy: 0.05
+  energy_tolerance: 0.01
+  label_change_tolerance: 0.005
+  merge_threshold: 5.0
+  discovery_max_models_per_iter: 1
+  reassignment_margin: 0.15
+  discovery_improvement_margin: 0.20
+  spatial_coverage_min: 0.05
+  discovery_split_validation: true

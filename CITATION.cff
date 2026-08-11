@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using this metadata."
+title: "Scale-Adaptive Residual-Driven Homography K-Means"
+type: software
+version: 0.1.0
+date-released: 2026-08-12
+license: MIT
+authors:
+  - family-names: Lee
+    given-names: Yeonseok
+abstract: "An interpretable residual-driven Homography K-Means refinement pipeline for multi-plane correspondence segmentation."
