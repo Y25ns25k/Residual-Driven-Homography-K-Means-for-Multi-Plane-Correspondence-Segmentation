@@ -10,6 +10,12 @@ than state of the art.
 > repository's Sequential RANSAC baseline on multi-plane data.  This is not a
 > claim of state-of-the-art multi-model fitting, exact model-count recovery,
 > or direct equivalence to CONSAC, Multi-X, or Progressive-X.
+> 
+## Project report
+
+A public, redacted version of the final project report is available
+[here](docs/Residual-Driven-Homography-K-Means-Report.pdf). It removes the
+author name, course name, and student ID from the original course submission.
 
 ## Highlights
 
