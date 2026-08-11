@@ -14,7 +14,7 @@ than state of the art.
 ## Project report
 
 A public, redacted version of the final project report is available
-[here](docs/Residual-Driven-Homography-K-Means-Report.pdf). It removes the
+[here](Residual-Driven-Homography-K-Means-Report.pdf). It removes the
 author name, course name, and student ID from the original course submission.
 
 ## Highlights
